@@ -11,20 +11,9 @@ class Penyuluh extends CI_Controller
 		//$this->output->enable_profiler();
     }
 
-    public function profil(){
+    public function index(){
 
-        $data['title'] = 'Profil Penyuluh';
-        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
-        
-
-        $data['penyuluh'] = $this->penyuluh->getPenyuluhbysatminkal();
-		
-		$this->load->view('templates/header', $data);
-		$this->load->view('templates/sidebar', $data);
-		$this->load->view('templates/topbar', $data);
-		$this->load->view('penyuluh/profil', $data);
-		$this->load->view('templates/footer');
-        
+        $this->Aktivitasbulanan();
     }
 	
 	public function detail($id="")
@@ -32,8 +21,6 @@ class Penyuluh extends CI_Controller
 		$list = $this->penyuluh->getPenyuluhbyid($id);
 		$dt = $list[0];
 		
-		
-		//print_r($dt);
 		$myDateTime = DateTime::createFromFormat('Y-m-d', $dt['tgl_lahir']);
 		$formatted = $myDateTime->format('d-m-Y');
 		$dt['ttl'] = $dt['tempat_lahir'].', '.$formatted;
@@ -71,7 +58,7 @@ class Penyuluh extends CI_Controller
 		$getpoktan = $this->penyuluh->getPoktan($iddesa);
 		$opsipoktan = "<option value=''>-pilih poktan-</option>";
 		foreach ($getpoktan as $p)
-			$opsipoktan .= "<option value='".$p['id_poktan']."'>".$p['nama_poktan']."</option>";		
+			$opsipoktan .= "<option value='".$p['id_poktan'].'xx'.$p['nama_poktan']."'>".$p['nama_poktan']."</option>";		
 		$data['poktan'] = $opsipoktan;
 		
 		$getmetode = $this->penyuluh->getmetode();
@@ -85,17 +72,36 @@ class Penyuluh extends CI_Controller
 		foreach ($getteknologi as $t)
 			$opsiteknologi .= "<option value='".$t['teknologi_id']."'>".$t['teknologi_nama']."</option>";
 		$data['teknologi'] = $opsiteknologi;
+		
+		$bulan = array('1'=>'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'); 
+		$tabel = $this->penyuluh->getdiseminasi($dt['nip']);
+		$content = '';
+		if (count($tabel) > 0){
+			$no=1;
+			
+			foreach ($tabel as $t){
+				$content .= '<tr>';
+				$content .= '<td scope="row" align="center">'.$no++.'</td>';
+				$content .= '<td scope="row" align="center">'.$bulan[$t['bulan']].' '.$t['tahun'].'</td>';
+				$content .= '<td scope="row" align="center">'.$t['kelompok_nama'].'</td>';
+				$content .= '<td scope="row" align="center">'.$t['metode_nama'].'</td>';
+				$content .= '<td scope="row" align="center">'.$t['teknologi_nama'].'</td>';
+				$content .= '<td scope="row" align="center">'.$t['nama_teknologi'].'</td>';
+				$content .= '<td scope="row" align="center"><a href="#">ubah</a> <a href="#">hapus</a></td>';
+				$content .= '</tr>';
+			}
+		}
+		else
+			$content .= '<tr><td scope="row" colspan="7" align="center"> Belum ada data </td></tr>';
+		$data['tabel'] = $content;
 
 		echo json_encode($data);
     }
 
    public function Aktivitasbulanan(){
-		//print_r($this->session->all_userdata());die();
 		$data['title'] = 'Aktivitas Bulanan';
         $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
         
-        //$data['penyuluh'] = $this->penyuluh->getPenyuluhbysatminkal();
-		
 		$this->load->view('templates/header', $data);
 		$this->load->view('templates/sidebar', $data);
 		$this->load->view('templates/topbar', $data);
@@ -103,51 +109,7 @@ class Penyuluh extends CI_Controller
 		$this->load->view('templates/footer');
    }
 	
-	public function Aktivitas($code="")
-    {
-		$kode = explode("zz",$code);
-		$id=$kode[0];
-		$wilker=$kode[1];
-		//$list = $this->penyuluh->getPenyuluhbynip($nip);
-		//$list = $this->penyuluh->getPenyuluhbyid($id);
-		$dt = $list[0];
-		//print_r($dt);
-		
-		//print_r($list);
-		$txt ='
-				<table class="table table-hover" >                
-					<tbody>						
-						<tr>
-							<td align="left" width="30%" scope="row">Kelompok</td>
-							<td align="left"><strong>'.$wilker.'</strong></td>							
-						</tr>	
-						<tr>
-							<td align="left" width="30%" scope="row">Jumlah Anggota</td>
-							<td align="left"><strong>otomatis</strong></td>							
-						</tr>	
-						<tr>
-							<td align="left" width="30%" scope="row">Metode</td>
-							<td align="left"><strong>dropdown</strong></td>							
-						</tr>
-						<tr>
-							<td align="left" width="30%" scope="row">Kategori Teknologi</td>
-							<td align="left"><strong>Pilih</strong></td>							
-						</tr>
-						<tr>
-							<td align="left" width="30%" scope="row">Nama teknologi</td>
-							<td align="left"><strong>input</strong></td>							
-						</tr>
-						
-					</tbody>
-				</table>
-		
-					
-					
-					';
-        echo $txt;
-		exit();
-    }
-    
+	    
 	public function penyuluh_data()
     {
 		$kode='3404'; //disesuaikan dengan daerahnya
@@ -229,8 +191,29 @@ class Penyuluh extends CI_Controller
      }
 	 
 	 function simpanaktivitas(){
-		 echo 'test';
-		 die();
+		 $periode = explode('-',$this->input->post('periode'));
+		 $kelompok = explode('xx',$this->input->post('poktan'));
+		 
+		 $dt=array(
+			'kelompok_id'=>$kelompok[0],
+			'kelompok_nama'=>$kelompok[1],
+			'tahun'=>$periode[1],
+			'bulan'=>$periode[0],
+			'jumlah_anggota'=>$this->input->post('jumlahanggota'),
+			'metode'=>$this->input->post('metode'),
+			'kategori_teknologi'=>$this->input->post('teknologi_kategori'),
+			'nama_teknologi'=>$this->input->post('teknologi_nama'),
+			'date'=>date('Y-m-d H:i:s'),
+			'penyuluh_nip'=>$this->input->post('penyuluh_nip'),
+		 );
+		 
+		 $this->db->insert('tr_diseminasi_teknologi',$dt);
+		 //echo $this->db->last_query();die();
+		 if ($this->db->affected_rows() > 0)
+			 return 1;
+		 else
+			 return 0;
+
 	 }
 	 
 	 function getanggotapoktan($idpoktan=""){

@@ -16,6 +16,14 @@ class Penyuluh_model extends CI_Model
 		return $this->db->get('tb_teknologi')->result_array();
 	}
 	
+	public function getdiseminasi($nip=""){
+		$this->db->where('penyuluh_nip',$nip);
+		$this->db->join('tb_metode b','b.metode_id = a.metode');
+		$this->db->join('tb_teknologi c','c.teknologi_id = a.kategori_teknologi');
+		$this->db->order_by('a.id','asc');
+		return $this->db->get('tr_diseminasi_teknologi a')->result_array();
+	}
+	
     public function getPenyuluhbysatminkal($satminkal='3404',$start="",$length="")
     {
 		$json = file_get_contents($this->api_url.'simantap/penyuluhbysatminkal/list?satminkal='.$satminkal.'&start='.$start.'&length='.$length.'&api-key='.$this->api_key);

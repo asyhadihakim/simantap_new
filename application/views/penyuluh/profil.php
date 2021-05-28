@@ -163,8 +163,13 @@
 				</div>
 				<div id="my-tab-content" class="tab-content">
 					<div class="tab-pane"  id="tambahaktivitas">
-						<div class="card-body">&raquo; Tambah Aktivitas Bulanan</div>
+						<div class="text-lg" style="padding:10px 0px">							
+							&raquo; Tambah Aktivitas Bulanan									
+						</div>
+
 						<form action="" method="post" class="inputaktivitas">
+							<div class="bg-gradient-success text-gray-100" style="padding:20px 10px; display:none;" >Data sukses disimpan</div>
+							<div class="bg-gradient-danger text-gray-100" style="padding:20px 10px; display:none;" >Data gagal disimpan</div>
 							<table class="table table-hover" >                
 								<tbody>						
 									<tr>
@@ -178,14 +183,9 @@
 														foreach ($bulan as $k =>$v){
 															echo '<option value="'.$k.'-'.$th.'">'.$v.' '.$th.'</option>';
 														}
-													}
-												
+													}												
 												?>
-                                           
-                                               
-												
-                                            </select>
-											
+                                            </select>											
                                        </td>							
 									</tr>	
 									<tr>
@@ -198,7 +198,9 @@
 									</tr>	
 									<tr>
 										<td align="left" width="30%" scope="row">Jumlah Anggota</td>
-										<td align="left"><div id="jumanggota"></div></td>							
+										<td align="left"><div id="jumanggota"></div>
+											<input type="hidden" name="jumlahanggota" id="jumlahanggota">
+											<input type="hidden" name="penyuluh_nip" id="penyuluhnip"></td>							
 									</tr>	
 									<tr>
 										<td align="left" width="30%" scope="row">Metode</td>
@@ -228,10 +230,13 @@
 									</tr>
 								</tbody>
 							</table>
+							
 						</form>
 					</div>
 					<div class="tab-pane active"  id="aktivitas">
-						<h5>&raquo; Aktivitas Bulanan</h5>
+						<div class="text-lg" style="padding:10px 0px">							
+							&raquo; Aktivitas Bulanan
+						</div>
 						<table class="table table-hover display" id="datatables">
 							<thead>
 								<tr>
@@ -245,21 +250,16 @@
 									<th scope="col">Action</th>
 								</tr>
 							</thead>
-							<tbody>
-								<!--
-								<tr>
-									<td scope="row" colspan="7" align="center"> -- Load data -- </td>
-								   
-									
-								</tr>
-								-->
+							<tbody id="tabel">
+																
 							</tbody>
 						</table>
 					
 						
 					</div>
 					<div class="tab-pane " id="profil">
-						<h5>&raquo; Detail Penyuluh</h5>
+						<div class="text-lg" style="padding:10px 0px">	&raquo; Detail Penyuluh</div>
+						
 						<table class="table table-hover" >                
 							<tbody>				
 								<tr>
@@ -360,16 +360,18 @@
 					var poktan = response.poktan;
 					var metode = response.metode;
 					var teknologi = response.teknologi;
+					var tabel = response.tabel;
 					
 					$('#detailModal').modal('show'); // show bootstrap modal when complete loaded
 					$('#opsipoktan').html(poktan); 
 					$('#opsimetode').html(metode); 
 					$('#opsiteknologi').html(teknologi); 
-					
+					$('#tabel').html(tabel); 
 					//$('#aktivitas').html(aktivitas); 
 					$('#nip').text(profil.nip); 
 					$('#namalengkap').text(profil.namalengkap); 
-					$('#nip1').text(profil.nip); 
+					$('#nip1').text(profil.nip);
+					$('#penyuluhnip').val(profil.nip); 					
 					$('#namalengkap1').text(profil.namalengkap); 
 					$('#ttl').text(profil.ttl); 
 					$('#jenkel').text(profil.jenkel); 
@@ -397,7 +399,8 @@
 			   });
 		$('#opsipoktan').change(function(){
 			$.post("<?php echo base_url(); ?>" + "penyuluh/getanggotapoktan/"+$('#opsipoktan').val(),{},function(obj){
-				$('#jumanggota').html(obj);
+				$('#jumanggota').html(obj+' orang');
+				$('#jumlahanggota').val(obj);
 			});
 		});
 		
@@ -408,7 +411,15 @@
 				url: "<?php echo base_url(); ?>" + "penyuluh/simpanaktivitas/",
 				data: $('form.inputaktivitas').serialize(),
 				success: function(response) {
-					alert(response);
+					if (response != 1){
+						alert(response);
+						$(".gagal").show();
+					}
+					else {
+						alert('Berhasil nyimpan');
+						$(".inputaktivitas").reset();
+						$(".success").show();
+					}	
 				},
 				error: function() {
 					alert('Error');
