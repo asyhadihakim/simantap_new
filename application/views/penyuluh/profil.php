@@ -29,12 +29,34 @@
     				"bFilter": true,
     				"bInfo": false, 
 					*/
-					//"pageLength" : 5,
+					
+					// "serverSide": true,
+					//"processing": true,
+					
+					"paging": true,
+					"searching": { "regex": true },
+					"lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
+					"pageLength": 10,
+					
+	//				'paging': true,
+    'ordering': true,
+    //'info': true,
+    //'order': [[2, 'desc']],
+    //"columnDefs": [
+     //   {"orderable": false, "targets": 6}
+    //],
+  //  "processing": true,
+    //"serverSide": true,
+	
+					//"pageLength" : 10,
 					"processing":true,
 					"serverSide":true,
 				 	"ajax": {
 						url : "<?php echo site_url("penyuluh/penyuluh_data/") ?>",
-						type : 'GET'
+						type : 'POST'
+					},
+					"language": {
+						"url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Indonesian.json"
 					},
 					
                 });
@@ -121,74 +143,123 @@
 				</script>
 				
 				
-				<h2 class="h3 mb-0 text-gray-800">
-					<span id="namalengkap"></span> / <span id="nip"></span>
-				</h2>
 				
-				<ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-					 <li class="active"><a style="margin:10px 10px;" href="#aktivitas" class="btn btn-primary" data-toggle="tab">Aktivitas Bulanan</a></li>
-					 <li ><a style="margin:10px 10px;" href="#profil"  class="btn btn-info" data-toggle="tab">Profil Penyuluh</a></li>
-					 
-					   
-				</ul>
+				
+				<div>
+					<div style="float:left; margin-top:10px">
+						<h6 >
+							<span style="font-weight:bold" id="namalengkap"></span><br />
+							<span style="font-weight:bold" id="nip"></span>
+						</h6>
+					</div>
+					<div style="float:right">
+						<ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+							<li ><a style="margin:10px 10px;" href="#tambahaktivitas" class="btn btn-danger" data-toggle="tab">Tambah Aktivitas</a></li>
+							<li class="active"><a style="margin:10px 10px;" href="#aktivitas" class="btn btn-warning" data-toggle="tab">Daftar Aktivitas</a></li>
+							<li ><a style="margin:10px 10px;" href="#profil"  class="btn btn-info" data-toggle="tab">Profil Penyuluh</a></li>
+						</ul>
+					</div>
+					<div style="clear:both"></div>
+				</div>
 				<div id="my-tab-content" class="tab-content">
-					<div class="tab-pane active"  id="aktivitas">
-						
-					
-						<form action="" method="post" class="user">
+					<div class="tab-pane"  id="tambahaktivitas">
+						<div class="card-body">&raquo; Tambah Aktivitas Bulanan</div>
+						<form action="" method="post" class="inputaktivitas">
 							<table class="table table-hover" >                
 								<tbody>						
 									<tr>
+										<td align="left" width="30%" scope="row">Periode</td>
+										<td align="left">
+											 <select class="form-control" name="periode">
+												 <option value="">-pilih periode-</option>
+												<?php 
+													$bulan = array('1'=>'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'); 
+													for ($th=2021;$th<=date('Y');$th++){
+														foreach ($bulan as $k =>$v){
+															echo '<option value="'.$k.'-'.$th.'">'.$v.' '.$th.'</option>';
+														}
+													}
+												
+												?>
+                                           
+                                               
+												
+                                            </select>
+											
+                                       </td>							
+									</tr>	
+									<tr>
 										<td align="left" width="30%" scope="row">Kelompok</td>
 										<td align="left">
-                                            <select class="form-control" id="opsipoktan">
+                                            <select class="form-control" name="poktan" id="opsipoktan">
                                                 
                                             </select>
                                        </td>							
 									</tr>	
 									<tr>
 										<td align="left" width="30%" scope="row">Jumlah Anggota</td>
-										<td align="left"><strong>otomatis</strong></td>							
+										<td align="left"><div id="jumanggota"></div></td>							
 									</tr>	
 									<tr>
 										<td align="left" width="30%" scope="row">Metode</td>
 										<td align="left">
-											<select class="form-control">
-                                                <option>1</option>
-                                                <option>2</option>
-                                                <option>3</option>
-                                                <option>4</option>
-                                                <option>5</option>
+											<select class="form-control" name="metode" id="opsimetode">
+                                               
                                             </select>
 										</td>							
 									</tr>
 									<tr>
 										<td align="left" width="30%" scope="row">Kategori Teknologi</td>
 										<td align="left">
-											<select class="form-control" name="teknologi_kategori">
-                                                <option>1</option>
-                                                <option>2</option>
-                                                <option>3</option>
-                                                <option>4</option>
-                                                <option>5</option>
+											<select class="form-control" name="teknologi_kategori" id="opsiteknologi">
+                                               
                                             </select>
 										</td>							
 									</tr>
 									<tr>
 										<td align="left" width="30%" scope="row">Nama Teknologi</td>
 										<td align="left">
-											<input type="text" class="form-control form-control-user" name="teknologi_nama" id="exampleFirstName"	placeholder="Nama Teknologi"></td>							
+											<input type="text" class="form-control" name="teknologi_nama" id="exampleFirstName"	></td>							
 									</tr>
 									<tr>
 										<td align="left" width="30%" scope="row">&nbsp;</td>
 										<td align="left">
-											<input type="submit" class="btn btn-primary mb-3" name="simpan" id="exampleFirstName"	value="simpan"></td>							
+											<input type="submit" class="btn btn-primary mb-3" name="simpan" id="save"	value="simpan"></td>							
 									</tr>
 								</tbody>
 							</table>
 						</form>
 					</div>
+					<div class="tab-pane active"  id="aktivitas">
+						<h5>&raquo; Aktivitas Bulanan</h5>
+						<table class="table table-hover display" id="datatables">
+							<thead>
+								<tr>
+									<th scope="col">#</th>
+									
+									<th scope="col">Periode</th>
+									<th scope="col">Kelompok</th>
+									<th scope="col">Metode</th>                                           
+									<th scope="col">Kategori Teknologi</th>
+									<th scope="col">Nama Teknologi</th>    
+									<th scope="col">Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								<!--
+								<tr>
+									<td scope="row" colspan="7" align="center"> -- Load data -- </td>
+								   
+									
+								</tr>
+								-->
+							</tbody>
+						</table>
+					
+						
+					</div>
 					<div class="tab-pane " id="profil">
+						<h5>&raquo; Detail Penyuluh</h5>
 						<table class="table table-hover" >                
 							<tbody>				
 								<tr>
@@ -287,9 +358,14 @@
 					var profil = response.profil;
 					var aktivitas = response.aktivitas;
 					var poktan = response.poktan;
+					var metode = response.metode;
+					var teknologi = response.teknologi;
 					
 					$('#detailModal').modal('show'); // show bootstrap modal when complete loaded
 					$('#opsipoktan').html(poktan); 
+					$('#opsimetode').html(metode); 
+					$('#opsiteknologi').html(teknologi); 
+					
 					//$('#aktivitas').html(aktivitas); 
 					$('#nip').text(profil.nip); 
 					$('#namalengkap').text(profil.namalengkap); 
@@ -319,6 +395,27 @@
 			   }).ajaxStop(function(){
 				  $(this).hide();
 			   });
+		$('#opsipoktan').change(function(){
+			$.post("<?php echo base_url(); ?>" + "penyuluh/getanggotapoktan/"+$('#opsipoktan').val(),{},function(obj){
+				$('#jumanggota').html(obj);
+			});
+		});
+		
+		$('#save').on('click', function(e) {
+			//e.preventDefault();
+			$.ajax({
+				type: "POST",
+				url: "<?php echo base_url(); ?>" + "penyuluh/simpanaktivitas/",
+				data: $('form.inputaktivitas').serialize(),
+				success: function(response) {
+					alert(response);
+				},
+				error: function() {
+					alert('Error');
+				}
+			});
+			return false;
+		});
 	</script>
 	
 	<div id="loading" style="position:fixed;

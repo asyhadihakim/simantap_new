@@ -66,23 +66,35 @@ class Penyuluh extends CI_Controller
 		$dt['wilkerja'] = $w;
 		$dt['unker'] = (($dt['kode_kab'] == '3') ? $dt['namabapel'] : $dt['namabpp']);
         $data['profil'] = $dt;
-		$iddesa = implode('m',$desa);
 		
+		$iddesa = implode('m',$desa);
 		$getpoktan = $this->penyuluh->getPoktan($iddesa);
 		$opsipoktan = "<option value=''>-pilih poktan-</option>";
-		foreach ($getpoktan as $p){
-			$opsipoktan .= "<option value='".$p['id_poktan']."'>".$p['nama_poktan']."</option>";
-		}
+		foreach ($getpoktan as $p)
+			$opsipoktan .= "<option value='".$p['id_poktan']."'>".$p['nama_poktan']."</option>";		
 		$data['poktan'] = $opsipoktan;
-		//$data['aktivitas'] = 'hae'; 
+		
+		$getmetode = $this->penyuluh->getmetode();
+		$opsimetode = "<option value=''>-pilih metode-</option>";
+		foreach ($getmetode as $m)
+			$opsimetode .= "<option value='".$m['metode_id']."'>".$m['metode_nama']."</option>";
+		$data['metode'] = $opsimetode;
+		
+		$getteknologi = $this->penyuluh->getteknologi();
+		$opsiteknologi = "<option value=''>-pilih teknologi-</option>";
+		foreach ($getteknologi as $t)
+			$opsiteknologi .= "<option value='".$t['teknologi_id']."'>".$t['teknologi_nama']."</option>";
+		$data['teknologi'] = $opsiteknologi;
+
 		echo json_encode($data);
     }
 
    public function Aktivitasbulanan(){
+		//print_r($this->session->all_userdata());die();
 		$data['title'] = 'Aktivitas Bulanan';
         $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
         
-        $data['penyuluh'] = $this->penyuluh->getPenyuluhbysatminkal();
+        //$data['penyuluh'] = $this->penyuluh->getPenyuluhbysatminkal();
 		
 		$this->load->view('templates/header', $data);
 		$this->load->view('templates/sidebar', $data);
@@ -140,18 +152,43 @@ class Penyuluh extends CI_Controller
     {
 		$kode='3404'; //disesuaikan dengan daerahnya
 		  
-		$draw = intval($this->input->get("draw"));
-        $start = intval($this->input->get("start"));
-        $length = intval($this->input->get("length"));
+		//$draw = intval($this->input->get("draw"));
+        //$start = intval($this->input->get("start"));
+        //$length = intval($this->input->get("length"));
+		//print_r($_POST);die();
+		$draw=1;
+		$start=0;
+		$length=30;
+		
+		$draw = intval($this->input->post("draw"));
+        $start = intval($this->input->post("start"));
+        $length = intval($this->input->post("length"));
+		
+		$jumrecord = count($this->penyuluh->getPenyuluhbysatminkal($kode));
+		$postdata = http_build_query(
+			array(
+				'satminkal' => $kode,
+				'start' => $start,
+				'length' => $length,
+				'api-key' => 'f13914d292b53b10936b7a7d1d6f2406',
+			)
+		);
+		//print_r($_POST);die();
+		$opts = array('http' =>
+			array(
+				'method'  => 'POST',
+				'header'  => 'Content-Type: application/x-www-form-urlencoded',
+				'content' => $postdata
+			)
+		);
 
-		$penyuluh = $this->penyuluh->getPenyuluhbysatminkal();
+		$context  = stream_context_create($opts);
+		$result = file_get_contents('https://api.pertanian.go.id/api/simantap/penyuluhbysatminkal/list', false, $context);		
+		$penyuluh = json_decode($result,true);
+		//print_r(json_decode$penyuluh);die();
 		
 		$data = array();
-		$data1 = array();
-		$data2 = array();
-		$data3 = array();
-		$data4 = array();
-	  
+		
 		$no = 1;
         foreach($penyuluh as $p) {
 		  	$myDateTime = DateTime::createFromFormat('Y-m-d', $p['tgl_lahir']);
@@ -162,39 +199,16 @@ class Penyuluh extends CI_Controller
 				case 7 : $status = 'CPNS';break;
 				default : $status = '';break;
 			}
-			$dtwilker = array();
 			
-			$wilker = explode(',',$p['wilker']);
-			foreach ($wilker as $k => $v){			
-				if (trim($v) <> '')
-					$dtwilker[] = trim($v);
-			}
-			if (count($dtwilker) > 0) {
-				//find wilker
-				$wil = implode('m',$dtwilker);
-				$dwilker = $this->penyuluh->getwilker($wil);
-				$awilker = array();
-				$jumpoktan=0;
-				foreach ($dwilker as $key => $val) {
-					$awilker[] = $val['nm_desa']; 
-					$jumpoktan += $val['jumlah'];
-				}
-				$namawilker = implode('<br /> ',$awilker);
-				
-			}
-			else {
-				$namawilker = '';
-				$jumpoktan = '';
-			}
 			
-			$idwil = $p['idpns'].'zz'.$wil;
+			
             $data[$no-1] = array(
 				$no,
 				$p['namalengkap'].'<br />'.$p['nip'],
                 $p['tempat_lahir'].', '.$formatted,
                 (($p['kode_kab'] == '3') ? $p['bapel'] : $p['nama_bpp']),
-                $namawilker,			
-				$jumpoktan,
+                implode('<br />',$p['dtwilker']),			
+				$p['jumpoktan'],
 				'<a style="color:#fff" title="Detail Penyuluh" id="popup" class="btn btn-primary mb-3" data-toggle="modal" style="cursor: pointer;" onclick="viewdetail('.$p['idpns'].')">Detail</a>
 				'
                );
@@ -204,12 +218,26 @@ class Penyuluh extends CI_Controller
           }
 			//print_r($data);die();	
           $output = array(
-               "draw" => $draw,
-                 "recordsTotal" => count($penyuluh),
-                 "recordsFiltered" => count($penyuluh),
+               //"draw" => $draw,
+			   "draw" => $draw,
+                 "recordsTotal" => $jumrecord,
+                 "recordsFiltered" => $jumrecord,
                  "data" => $data
             );
           echo json_encode($output);
           exit();
      }
+	 
+	 function simpanaktivitas(){
+		 echo 'test';
+		 die();
+	 }
+	 
+	 function getanggotapoktan($idpoktan=""){
+		$data = $this->penyuluh->getjumpoktananggota($idpoktan);
+		
+		die($data['jumanggota']);
+
+	}
+	 
 }
