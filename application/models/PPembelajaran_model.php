@@ -60,11 +60,11 @@ class PpembelajaranBpp_model extends CI_Model
 
             ['field' => 'peserta_poktan',
             'label' => 'Jumlah Peserta Poktan',
-            'rules' => 'required'],
+            'rules' => 'numeric'],
 
             ['field' => 'peserta_petani',
             'label' => 'Jumlah Peserta Petani',
-            'rules' => 'required'],
+            'rules' => 'numeric'],
 
             ['field' => 'manfaat',
             'label' => 'Manfaat',
