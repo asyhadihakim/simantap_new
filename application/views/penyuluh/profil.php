@@ -1,75 +1,56 @@
 <!-- Begin Page Content -->
 <div class="container-fluid">
-
     <!-- Page Heading -->
     <h1 class="h3 mb-4 text-gray-800"><?= $title; ?></h1>
-	<!--
-	<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.css">
-		 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.13/css/dataTables.bootstrap.min.css" />
-    	<script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script> 
-	
-	-->
+
 	<link href="<?php echo base_url(); ?>assets/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 	<script src="<?php echo base_url(); ?>assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="<?php echo base_url(); ?>assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
     <!-- Page level custom scripts -->
     <script src="<?php echo base_url(); ?>assets/js/demo/datatables-demo.js"></script>
-	
-	
-	
-		<script type="text/javascript" charset="utf-8">
-			$(document).ready(function() {
-				$('#datatables').dataTable({
-					/*
-                     "sPaginationType":"full_numbers",
-					"iDisplayLength": 50,
-					"bPaginate":false,
-                   	"bLengthChange": false,
-    				"bFilter": true,
-    				"bInfo": false, 
-					*/
-					
-					// "serverSide": true,
-					//"processing": true,
-					
-					"paging": true,
-					"searching": { "regex": true },
-					"lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
-					"pageLength": 10,
-					
-	//				'paging': true,
-    'ordering': true,
-    //'info': true,
-    //'order': [[2, 'desc']],
-    //"columnDefs": [
-     //   {"orderable": false, "targets": 6}
-    //],
-  //  "processing": true,
-    //"serverSide": true,
-	
-					//"pageLength" : 10,
-					"processing":true,
-					"serverSide":true,
-				 	"ajax": {
-						url : "<?php echo site_url("penyuluh/penyuluh_data/") ?>",
-						type : 'POST'
-					},
-					"language": {
-						"url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Indonesian.json"
-					},
-					
-                });
-			} );
-		</script>
-  
-  
-  
-		
-		
-		
-		
 
+	<script type="text/javascript" charset="utf-8">
+		var table_global;
+	
+		function inputup(){
+			table_global.DataTable().ajax.reload();
+		}
+		
+		$(document).ajaxStart(function(){
+				$("#loading").show();
+			}).ajaxStop(function(){
+				$("#loading").hide();
+			});
+	
+		$(document).ready(function() {
+			var tabel= $('#datatables').dataTable({
+				
+				"paging": true,
+				"searching": false,
+				"lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
+				"pageLength": 10,
+				'ordering': true,
+				"processing":true,
+				"serverSide":true,
+				"ajax": {
+					url : "<?php echo site_url("penyuluh/penyuluh_data/") ?>",
+					type : 'POST',
+					data : function(d){
+						return $.extend({},d,{
+							"search_keywords": $("#searchInput").val().toLowerCase(),
+							//"filter_option": $("#sortBy").val().toLowerCase(),
+						});
+					}
+				},
+				"language": {
+					"url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Indonesian.json"
+				},				
+			});
+			table_global = tabel;
+		} );
+	</script>
+  
     <div class="row">
         <div class="col-lg">
             <?php if (validation_errors()) : ?>
@@ -80,7 +61,13 @@
 
             <?= $this->session->flashdata('message'); ?>
 
-
+			<div class="form-group" align="right">
+				<label>Pencarian Penyuluh</label>
+				<label class="checkbox-inline">
+					<input type="text" id="searchInput"  class="form-control"  placeholder="Cari penyuluh.." onkeyup="inputup()">
+				</label>				
+			</div>
+			
             <table class="table table-hover display" id="datatables">
                 <thead>
                     <tr>
@@ -95,13 +82,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!--
-                    <tr>
-                        <td scope="row" colspan="7" align="center"> -- Load data -- </td>
-                       
-                        
-                    </tr>
-					-->
+                    
                 </tbody>
             </table>
 
@@ -168,8 +149,7 @@
 						</div>
 
 						<form action="" method="post" class="inputaktivitas">
-							<div class="bg-gradient-success text-gray-100" style="padding:20px 10px; display:none;" >Data sukses disimpan</div>
-							<div class="bg-gradient-danger text-gray-100" style="padding:20px 10px; display:none;" >Data gagal disimpan</div>
+							
 							<table class="table table-hover" >                
 								<tbody>						
 									<tr>
@@ -200,7 +180,8 @@
 										<td align="left" width="30%" scope="row">Jumlah Anggota</td>
 										<td align="left"><div id="jumanggota"></div>
 											<input type="hidden" name="jumlahanggota" id="jumlahanggota">
-											<input type="hidden" name="penyuluh_nip" id="penyuluhnip"></td>							
+											<input type="hidden" name="penyuluh_nip" id="penyuluhnip">
+										</td>							
 									</tr>	
 									<tr>
 										<td align="left" width="30%" scope="row">Metode</td>
@@ -337,8 +318,25 @@
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			</div>		
+        </div>
+    </div>
+</div> 
+<div class="modal fade " id="successModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newSubMenuModalLabel">Alert</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+			<div class="modal-body">				
+				<div id="msg">Data berhasil disimpan..</div>
 			</div>
-		
+			<div class="modal-footer">				
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			</div>			
         </div>
     </div>
 </div> 
@@ -411,14 +409,16 @@
 				url: "<?php echo base_url(); ?>" + "penyuluh/simpanaktivitas/",
 				data: $('form.inputaktivitas').serialize(),
 				success: function(response) {
-					if (response != 1){
+					if (response.status == "error"){
 						alert(response);
 						$(".gagal").show();
 					}
 					else {
-						alert('Berhasil nyimpan');
-						$(".inputaktivitas").reset();
-						$(".success").show();
+						$("form").trigger("reset");		
+						//$('#tabel').html(response.tabel); 
+						$('#successModal').modal('show');
+						//$(".inputaktivitas").reset();
+						//$(".success").show();
 					}	
 				},
 				error: function() {
@@ -439,5 +439,5 @@
    -moz-border-radius: 5px;
    -webkit-border-radius: 5px;
    z-index:3000;
-   display:none;"><img src='http://fungsional.pertanian.go.id/assets/img/ajax_loader.gif' width="80px" /><br />Mohon Tunggu</div>
+   display:none;"><img src='http://fungsional.pertanian.go.id/assets/img/ajax_loader.gif' width="80px" /><br />Loading...</div>
       
