@@ -33,7 +33,7 @@ class PdiBpp_model extends CI_Model
             'rules' => 'required'],
 
             ['field' => 'tipe_data_info',
-            'label' => 'Jenis Kegiatan',
+            'label' => 'Jenis Data & Info',
             'rules' => 'required'],
 
             ['field' => 'ket_foto',
