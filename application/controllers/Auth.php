@@ -72,21 +72,18 @@ class Auth extends CI_Controller
     }
 
     public function act_login()
-    {    
+    {
 
         $this->form_validation->set_rules('username', 'Username', 'trim|required');
         $this->form_validation->set_rules('password', 'Password', 'trim|required');
 
         if ($this->form_validation->run() == false) {
             $data['title'] = 'Login Page';
-            $this->load->view('templates/auth_header', $data);
-            $this->load->view('auth/login');
-            $this->load->view('templates/auth_footer');
+            $this->load->view('auth/login', $data);
         } else {
             // validasinya success
             $this->_login2();
-        }       
-     
+        }
     }
 
     private function _login2()
@@ -128,7 +125,8 @@ class Auth extends CI_Controller
         }
     }
 
-    public function verifySimluh(){
+    public function verifySimluh()
+    {
 
         if ($this->session->userdata('name')) {
             redirect('user');
@@ -145,67 +143,64 @@ class Auth extends CI_Controller
         } else {
             // validasinya success
             $this->_cekloginApiSimluh();
-        }       
-
+        }
     }
 
-    public function _cekloginApiSimluh(){
+    public function _cekloginApiSimluh()
+    {
 
         $postdata = http_build_query(
             array(
                 'username' => $this->input->post('username'),
                 'password' => $this->input->post('password'),
-                'api-key'=>'f13914d292b53b10936b7a7d1d6f2406'
-                )
-        );    
-       
+                'api-key' => 'f13914d292b53b10936b7a7d1d6f2406'
+            )
+        );
 
-        $opts = array('http' =>
+
+        $opts = array(
+            'http' =>
             array(
                 'method'  => 'POST',
                 'header'  => 'Content-Type: application/x-www-form-urlencoded',
                 'content' => $postdata
             )
-          );
+        );
 
-    $context  = stream_context_create($opts);
-          
-    $result = file_get_contents('https://api.pertanian.go.id/api/simantap/userlogin/auth', true, $context);
-    $json = json_decode($result, true);
-     $data1 = $json['data'];
-    if(isset($json['success']) == 'Login sukses'){
+        $context  = stream_context_create($opts);
 
-        $user = $this->db->get_where('user', ['name' => $this->input->post('username')])->row_array();
+        $result = file_get_contents('https://api.pertanian.go.id/api/simantap/userlogin/auth', true, $context);
+        $json = json_decode($result, true);
+        $data1 = $json['data'];
+        if (isset($json['success']) == 'Login sukses') {
 
-        if($user){
+            $user = $this->db->get_where('user', ['name' => $this->input->post('username')])->row_array();
 
-            $this->session->set_flashdata('message', '<div class="alert alert-warning" role="succes">Akun ini sudah terverifikasi</div>');             
-            redirect('auth/verifySimluh');     
+            if ($user) {
 
-        }else{
+                $this->session->set_flashdata('message', '<div class="alert alert-warning" role="succes">Akun ini sudah terverifikasi</div>');
+                redirect('auth/verifySimluh');
+            } else {
 
-            $data = [
-                'name' => htmlspecialchars($this->input->post('username', true)),
-                'email' => htmlspecialchars($data1['email']),
-                'image' => 'default.jpg',
-                'password' => password_hash($this->input->post('password'), PASSWORD_DEFAULT),
-                'role_id' => 2,
-                'is_active' => 1,   // is_active 1 set user aktif, 0 set user non aktif
-                'date_created' => time()
-            ];
+                $data = [
+                    'name' => htmlspecialchars($this->input->post('username', true)),
+                    'email' => htmlspecialchars($data1['email']),
+                    'image' => 'default.jpg',
+                    'password' => password_hash($this->input->post('password'), PASSWORD_DEFAULT),
+                    'role_id' => 2,
+                    'is_active' => 1,   // is_active 1 set user aktif, 0 set user non aktif
+                    'date_created' => time()
+                ];
 
-            $this->db->insert('user', $data);     
-            $this->session->set_flashdata('message', '<div class="alert alert-success" role="succes">Berhasil terverifikasi silahkan login</div>');             
-            redirect('auth/act_login');   
-
-        } 
-
-     }else{
-         // echo "login gagal";
-          $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Gagal Verifikasi, Akun Tidak Ditemukan</div>');
-          redirect('auth/verifySimluh');        
-      }
-
+                $this->db->insert('user', $data);
+                $this->session->set_flashdata('message', '<div class="alert alert-success" role="succes">Berhasil terverifikasi silahkan login</div>');
+                redirect('auth/act_login');
+            }
+        } else {
+            // echo "login gagal";
+            $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Gagal Verifikasi, Akun Tidak Ditemukan</div>');
+            redirect('auth/verifySimluh');
+        }
     }
 
 
@@ -232,7 +227,7 @@ class Auth extends CI_Controller
             $this->load->view('templates/auth_footer');
         } else {
             $email = $this->input->post('email', true);
-          
+
             $data = [
                 'name' => htmlspecialchars($this->input->post('name', true)),
                 'email' => htmlspecialchars($email),
